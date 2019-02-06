@@ -6,3 +6,9 @@ Open your album, and open RetroReloaded Updater.
 
 ![alt text](RR_Release1.2.PNG)
 
+Features:
+Fix Themes crashes when access to the Switch Settings menu just launching RetroReloaded Updater.
+Enable/Disable Themes capabilities.
+Allow to choose Themes between the ones suggested.
+Allow to update RetroReloaded CFW Package.
+
