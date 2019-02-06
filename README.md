@@ -4,5 +4,5 @@ Just copy the last release of RetroReloaded Updater NRO file into your microSD s
 
 Open your album, and open RetroReloaded Updater.
 
-![alt text](RetroReloadedUpdater.png)
+![alt text](RR_Release1.2.PNG)
 
