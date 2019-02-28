@@ -27,6 +27,7 @@
 #define WIN_WIDTH 1280
 #define WIN_HEIGHT 720
 #define RR_MINVERSION 124
+#define RR_MINVERSIONPRODINFO 133
 
 static u32 currSel = 0;
 static u32 currSubSel = 0;
@@ -43,7 +44,7 @@ static u64 ReleasedInput = 0;
 
 static string title;
 static string version;
-static string current_RR_version= "1.10"; //Retrieved from release txt file
+static string current_RR_version= "1.11"; //Retrieved from release txt file
 static string CurrentCFG_Name; //Custom Firmware Name
 static string CurrentCFG_Folder; //Custom Firmware Folder
 static string CurrentTemplate; //Current Active Template
@@ -51,6 +52,7 @@ static string CurrentNXFirmwareVersion; //Switch Firmware Version
 static string SerialNumber; //Switch Serial Number
 static u32 CurrentFirmware_ID; //Current CFW ID
 static bool TemplateEnabled;
+static bool ProdinfoRW;
 static int RRReleaseNumber;
 
 
@@ -131,6 +133,12 @@ else
 
 //Help
 void UI::optAbout() {
+    string mode = "";
+    if(FS::IsProdinfoRW())
+	mode = "RW";
+    else
+	mode = "RO";
+
     MessageBox(
         "About", 
         "NX FW Version: "+CurrentNXFirmwareVersion +"\n"+
@@ -138,6 +146,7 @@ void UI::optAbout() {
         "RR Version: " + current_RR_version + 
         "\n\n" +
         "CFW: "+ CurrentCFG_Name+"\n"+
+	"PRODINFO MODE: "+ mode + "\n"+
         "Template: "+CurrentTemplate+"\n"+
         //" Located: sdmc:/"+CurrentCFG_Folder+" FWD_ID: "+std::to_string(CurrentFirmware_ID)+"\n"+
         "Main developers:\n" +
@@ -145,7 +154,35 @@ void UI::optAbout() {
     TYPE_OK);
 }
 
+void UI::optDisableProdinfo() {
+ 
+  bool isProdinfoRW = FS::IsProdinfoRW();
+  string RO = "Read Only";
+  string RW = "Read / Write";
 
+  string question = "";
+
+  if(isProdinfoRW)
+	question = RO;
+  else
+	question = RW;
+
+    if(MessageBox("Prodinfo Mode","Do you want to set Prodinfo in \n"+ question +" mode?", TYPE_YES_NO)) {
+
+        if(isProdinfoRW)
+        {
+            FS::SetProdinfoMode(0);
+            MessageBox("Info","Prodinfo has been set as "+RO+"\nReboot is required to apply changes!",TYPE_OK);
+        }
+        else
+        {
+            FS::SetProdinfoMode(1);
+            MessageBox("Info","Prodinfo has been set as "+RW+"\nReboot is required to apply changes!",TYPE_OK);
+        }
+
+    }
+
+}
 
 //remove template
 void UI::optDisableTemplate() {
@@ -215,6 +252,10 @@ void UI::RePaintMenu()
         mainMenu.push_back(MenuOption("Select Themes","Select Template",nullptr));
 
     }
+    if(RRReleaseNumber >= RR_MINVERSIONPRODINFO)
+    {
+        mainMenu.push_back(MenuOption("Prodinfo RW","RO/RW Prodinfo",nullptr));
+    }
 
     
     
@@ -225,6 +266,11 @@ void UI::RePaintMenu()
     {
         mainMenu[2].subMenu.push_back(MenuOption("On/Off Template", "", bind(&UI::optDisableTemplate, this)));    
         UI::drawTemplatesOption();
+    }
+
+    if(RRReleaseNumber >= RR_MINVERSIONPRODINFO)
+    {
+        mainMenu[4].subMenu.push_back(MenuOption("Prodinfo RO/RW", "",bind(&UI::optDisableProdinfo, this)));
     }
 
 }
@@ -367,6 +413,7 @@ void UI::setInstance(UI ui) {
     RRReleaseNumber = FS::GetRRReleaseNumber();
 
     TemplateEnabled = FS::IsTemplatedEnabled();
+    ProdinfoRW = FS::IsProdinfoRW();
 
     if(RRReleaseNumber < RR_MINVERSION)
         ui.MessageBox("Warning","Some features are disabled because\nyour RR version is lower than 1.24.\nPlease update!",TYPE_OK);

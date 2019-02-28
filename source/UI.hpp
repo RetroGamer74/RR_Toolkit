@@ -63,6 +63,7 @@ class UI
         void optAbout();
         void optUpdateHB();
         void optDisableTemplate();
+	void optDisableProdinfo();
         void EnableRRTheme();
         void EnableSBTheme();
         void drawTemplatesOption();

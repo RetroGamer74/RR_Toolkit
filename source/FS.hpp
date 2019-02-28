@@ -32,6 +32,7 @@ namespace FS {
     int GetCustomFirmware_ID();
     bool CopyFile(string origen, string destino);
     string GetLineFile(string path);
+    string GetProdinfoKeyValue(string path);
     string GetCustomFirmwareString();
     void WriteLineFile(string path, string data);
     string GetCustomFirmwareFolder();
@@ -42,12 +43,14 @@ namespace FS {
     string SwitchIdent_GetFirmwareVersion();
     string GetNXSerialNumber();
     bool IsTemplatedEnabled();
+    bool IsProdinfoRW();
     int GetFirmwareMajorVersion();
     void FixTemplateCrash(string path);
     int CheckFileExists(string path);
     void DoEnableTemplate(string TemplateCode);
     string GetFullTemplatePath();
+    string GetFullProdinfoPath();
     int GetRRReleaseNumber();
-
+    void SetProdinfoMode(int value);
 	string TestFunction();
 };

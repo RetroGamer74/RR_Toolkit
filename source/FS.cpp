@@ -36,6 +36,17 @@ vector<string> FS::EnumDir(string path) {
     return ret;
 }
 
+string FS::GetProdinfoKeyValue(string path) {
+	std::string dataLine="0";
+	std::ifstream datafile(path.c_str(),ios_base::binary);
+    if (datafile.is_open()) {
+        getline(datafile, dataLine);
+        getline(datafile, dataLine);
+        datafile.close();
+    }
+    return dataLine;
+}
+
 
 string FS::GetLineFile(string path) {
 	std::string dataLine="0";
@@ -150,6 +161,12 @@ int FS::GetFirmwareMajorVersion() {
 
 }
 
+string FS::GetFullProdinfoPath()
+{
+    string config_dir = "sdmc:/atmosphere/prodinfo.ini";
+    return config_dir;	
+}
+
 string FS::GetFullTemplatePath()
 {
 	string config_dir = "sdmc:/";
@@ -162,6 +179,17 @@ string FS::GetFullTemplatePath()
     source_path = base_firmware+basetitle;
 
     return source_path;	
+}
+
+bool FS::IsProdinfoRW()
+{
+    string source_path;
+    source_path = FS::GetFullProdinfoPath();
+    std::string allow_write = FS::GetProdinfoKeyValue(source_path);
+    if(strcmp(allow_write.c_str(),"allow_write=0")==0)
+	return false;
+    else
+	return true;
 }
 
 bool FS::IsTemplatedEnabled()
@@ -346,6 +374,11 @@ unsigned FS::DeleteDirRecursive(string path) {
 	}
 	
 	return 0;
+}
+
+void FS::SetProdinfoMode(int value)
+{
+   FS::WriteLineFile(FS::GetFullProdinfoPath(), "[config]\nallow_write="+std::to_string(value));
 }
 
 unsigned FS::MakeDir(string file, unsigned perm) {
