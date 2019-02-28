@@ -44,7 +44,7 @@ static u64 ReleasedInput = 0;
 
 static string title;
 static string version;
-static string current_RR_version= "1.11"; //Retrieved from release txt file
+static string current_RR_version= "1.12"; //Retrieved from release txt file
 static string CurrentCFG_Name; //Custom Firmware Name
 static string CurrentCFG_Folder; //Custom Firmware Folder
 static string CurrentTemplate; //Current Active Template
@@ -54,6 +54,13 @@ static u32 CurrentFirmware_ID; //Current CFW ID
 static bool TemplateEnabled;
 static bool ProdinfoRW;
 static int RRReleaseNumber;
+
+static u32 menuOptionCFWUpdate = 0;
+static u32 menuOptionThemeEnable = 1;
+static u32 menuOptionSelectTheme = 2;
+static u32 menuOptionProdinfo = 3;
+static u32 menuOptionAbout = 4;
+
 
 
 u32 clippy = 0;
@@ -154,6 +161,22 @@ void UI::optAbout() {
     TYPE_OK);
 }
 
+
+void setMenuOptionValues()
+{
+	if(RRReleaseNumber < RR_MINVERSION)
+	{
+		menuOptionAbout = 1;
+		return;
+	}
+
+	if(RRReleaseNumber >= RR_MINVERSION && RRReleaseNumber < RR_MINVERSIONPRODINFO)
+	{
+		menuOptionAbout = 3;
+		return;
+	}
+}
+
 void UI::optDisableProdinfo() {
  
   bool isProdinfoRW = FS::IsProdinfoRW();
@@ -242,9 +265,9 @@ void UI::optDisableTemplate() {
 void UI::RePaintMenu()
 {
     mainMenu.clear();
+
         //Main pages
     mainMenu.push_back(MenuOption("RR Updates", "Update RR Now!.", nullptr));
-    mainMenu.push_back(MenuOption("About", "About RetroReloaded Updater.",  bind(&UI::optAbout, this)));
 
     if(RRReleaseNumber >= RR_MINVERSION)
     {
@@ -256,21 +279,22 @@ void UI::RePaintMenu()
     {
         mainMenu.push_back(MenuOption("Prodinfo RW","RO/RW Prodinfo",nullptr));
     }
+    mainMenu.push_back(MenuOption("About", "About RetroReloaded Updater.",  bind(&UI::optAbout, this)));
 
     
     
     //Subpages
-    mainMenu[0].subMenu.push_back(MenuOption("Update RR Now", "", bind(&UI::optRRUpdate, this)));
-//    mainMenu[0].subMenu.push_back(MenuOption("Update RR NRO", "", bind(&UI::optUpdateHB, this)));
+    mainMenu[menuOptionCFWUpdate].subMenu.push_back(MenuOption("Update RR Now", "", bind(&UI::optRRUpdate, this)));
+//    mainMenu[menuOptionCFWUpdate].subMenu.push_back(MenuOption("Update RR NRO", "", bind(&UI::optUpdateHB, this)));
     if(RRReleaseNumber >= RR_MINVERSION)
     {
-        mainMenu[2].subMenu.push_back(MenuOption("On/Off Template", "", bind(&UI::optDisableTemplate, this)));    
+        mainMenu[menuOptionThemeEnable].subMenu.push_back(MenuOption("On/Off Template", "", bind(&UI::optDisableTemplate, this)));    
         UI::drawTemplatesOption();
     }
 
     if(RRReleaseNumber >= RR_MINVERSIONPRODINFO)
     {
-        mainMenu[4].subMenu.push_back(MenuOption("Prodinfo RO/RW", "",bind(&UI::optDisableProdinfo, this)));
+        mainMenu[menuOptionProdinfo].subMenu.push_back(MenuOption("Prodinfo RO/RW", "",bind(&UI::optDisableProdinfo, this)));
     }
 
 }
@@ -278,17 +302,17 @@ void UI::RePaintMenu()
 void UI::drawTemplatesOption(){
     TemplateEnabled = FS::IsTemplatedEnabled();
     string TemplateName;
-    mainMenu[3].subMenu.clear();
+    mainMenu[2].subMenu.clear();
     if(TemplateEnabled)
     {
         TemplateName = FS::GetToggleMarkWithTemplateName("RR");
-        mainMenu[3].subMenu.push_back(MenuOption(TemplateName, "", bind(&UI::EnableRRTheme, this)));
+        mainMenu[menuOptionSelectTheme].subMenu.push_back(MenuOption(TemplateName, "", bind(&UI::EnableRRTheme, this)));
         TemplateName = FS::GetToggleMarkWithTemplateName("SB");
-        mainMenu[3].subMenu.push_back(MenuOption(TemplateName, "", bind(&UI::EnableSBTheme, this)));    
+        mainMenu[menuOptionSelectTheme].subMenu.push_back(MenuOption(TemplateName, "", bind(&UI::EnableSBTheme, this)));    
     }
     else
     {
-        mainMenu[3].subMenu.push_back(MenuOption("Themes Feature", "", bind(&UI::EnableTemplateCapable, this)));        
+        mainMenu[menuOptionSelectTheme].subMenu.push_back(MenuOption("Themes Feature", "", bind(&UI::EnableTemplateCapable, this)));        
     }
 
 
@@ -387,17 +411,6 @@ UI::UI(string Title, string Version) {
     
     UI::RePaintMenu();
 
-/*
-    vector<string> paths = FS::EnumDir("/Toolkit/splashes");
-    for(unsigned int i=0;i<paths.size();i++) {
-        mainMenu[1].subMenu.push_back(MenuOption(paths[i], "", bind(&UI::optImage, this, i)));
-        images.push_back(IMG_Load(("/Toolkit/splashes/"+paths[i]).c_str()));
-    }
-*/
-
-    //Make dirs
-    //if(!FS::DirExists("/Toolkit"))  FS::MakeDir("/Toolkit", 0777);
-    //if(!FS::DirExists("/Toolkit/splashes"))  FS::MakeDir("/Toolkit/splashes", 0777);
 }
 
 void UI::setInstance(UI ui) {
@@ -414,6 +427,7 @@ void UI::setInstance(UI ui) {
 
     TemplateEnabled = FS::IsTemplatedEnabled();
     ProdinfoRW = FS::IsProdinfoRW();
+    setMenuOptionValues();
 
     if(RRReleaseNumber < RR_MINVERSION)
         ui.MessageBox("Warning","Some features are disabled because\nyour RR version is lower than 1.24.\nPlease update!",TYPE_OK);
@@ -605,7 +619,7 @@ void UI::renderMenu() {
                 }else{
                     drawText(subX + 30, subY + 30 + ((j+1)*50), mThemes->txtcolor, mainMenu[i].subMenu[j].getName(), mThemes->fntMedium);
                 }
-                if(j == currSubSel && currSel == 1) {
+                if(j == currSubSel && currSel == menuOptionAbout) {
                     SDL_Texture* tex = SDL_CreateTextureFromSurface(mRender._renderer, images[currSubSel]);
                     drawScaled(images[currSubSel], tex, 710, 120, images[currSubSel]->w/3, images[currSubSel]->h/3);
                 }
