@@ -12,3 +12,11 @@ Enable/Disable Themes capabilities.
 Allow to choose Themes between the ones suggested.
 Allow to update RetroReloaded CFW Package.
 
+
+# CREDITS
+
+Inspired and forked from Reinx Toolkit
+
+[You can get it here](https://github.com/Reisyukaku/ReiNXToolkit)
+
+Thank you.
