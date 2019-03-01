@@ -36,6 +36,11 @@ vector<string> FS::EnumDir(string path) {
     return ret;
 }
 
+void FS::DeleteFile(string path) {
+	 remove(path.c_str());
+}
+
+
 string FS::GetProdinfoKeyValue(string path) {
 	std::string dataLine="0";
 	std::ifstream datafile(path.c_str(),ios_base::binary);
@@ -167,9 +172,15 @@ string FS::GetFullProdinfoPath()
     return config_dir;	
 }
 
+string FS::GetFullFTPPath()
+{
+    string config_dir = "sdmc:/atmosphere/titles/420000000000000E/flags/boot2.flag";
+    return config_dir;	
+}
+
 string FS::GetFullTemplatePath()
 {
-	string config_dir = "sdmc:/";
+    string config_dir = "sdmc:/";
     string basetitle ="/titles/0100000000001000";
     string source_path;
     string CurrentCFG_Folder;
@@ -179,6 +190,19 @@ string FS::GetFullTemplatePath()
     source_path = base_firmware+basetitle;
 
     return source_path;	
+}
+
+bool FS::IsFTPEnabled()
+{
+    string source_path;
+    source_path = FS::GetFullFTPPath();
+
+    if(FS::CheckFileExists(source_path))
+    {
+	return true;
+    }
+    else
+        return false;
 }
 
 bool FS::IsProdinfoRW()
@@ -379,6 +403,14 @@ unsigned FS::DeleteDirRecursive(string path) {
 void FS::SetProdinfoMode(int value)
 {
    FS::WriteLineFile(FS::GetFullProdinfoPath(), "[config]\nallow_write="+std::to_string(value));
+}
+
+void FS::SetFTPStatus(bool value)
+{
+   if(value)
+	FS::WriteLineFile(FS::GetFullFTPPath(), "");
+   else
+	FS::DeleteFile(FS::GetFullFTPPath());	
 }
 
 unsigned FS::MakeDir(string file, unsigned perm) {

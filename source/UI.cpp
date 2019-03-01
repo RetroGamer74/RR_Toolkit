@@ -28,6 +28,7 @@
 #define WIN_HEIGHT 720
 #define RR_MINVERSION 124
 #define RR_MINVERSIONPRODINFO 133
+#define RR_MINVERSIONFTP 135
 
 static u32 currSel = 0;
 static u32 currSubSel = 0;
@@ -37,7 +38,6 @@ static u32 titleY = 30;
 static u32 menuX = 55, menuY = 115;
 static u32 subX = 411, subY = 88;
 
-// Input vars, updated every iteration of the loop, proper way to access input using CustomUI
 static u64 HeldInput = 0;
 static u64 PressedInput = 0;
 static u64 ReleasedInput = 0;
@@ -53,13 +53,15 @@ static string SerialNumber; //Switch Serial Number
 static u32 CurrentFirmware_ID; //Current CFW ID
 static bool TemplateEnabled;
 static bool ProdinfoRW;
+static bool isFTPEnabled = false;;
 static int RRReleaseNumber;
 
 static u32 menuOptionCFWUpdate = 0;
 static u32 menuOptionThemeEnable = 1;
 static u32 menuOptionSelectTheme = 2;
 static u32 menuOptionProdinfo = 3;
-static u32 menuOptionAbout = 4;
+static u32 menuOptionFTP = 4;
+static u32 menuOptionAbout = 5;
 
 
 
@@ -141,10 +143,16 @@ else
 //Help
 void UI::optAbout() {
     string mode = "";
+    string ftpStatus = "";
     if(FS::IsProdinfoRW())
 	mode = "RW";
     else
 	mode = "RO";
+
+    if(FS::IsFTPEnabled())
+	ftpStatus="Enabled";
+    else
+        ftpStatus="Disabled";
 
     MessageBox(
         "About", 
@@ -154,6 +162,7 @@ void UI::optAbout() {
         "\n\n" +
         "CFW: "+ CurrentCFG_Name+"\n"+
 	"PRODINFO MODE: "+ mode + "\n"+
+	"SYS-FTP STATUS: "+ ftpStatus + "\n"+
         "Template: "+CurrentTemplate+"\n"+
         //" Located: sdmc:/"+CurrentCFG_Folder+" FWD_ID: "+std::to_string(CurrentFirmware_ID)+"\n"+
         "Main developers:\n" +
@@ -173,6 +182,12 @@ void setMenuOptionValues()
 	if(RRReleaseNumber >= RR_MINVERSION && RRReleaseNumber < RR_MINVERSIONPRODINFO)
 	{
 		menuOptionAbout = 3;
+		return;
+	}
+
+	if(RRReleaseNumber >= RR_MINVERSIONPRODINFO && RRReleaseNumber < RR_MINVERSIONFTP)
+	{
+		menuOptionAbout = 4;
 		return;
 	}
 }
@@ -206,6 +221,38 @@ void UI::optDisableProdinfo() {
     }
 
 }
+
+void UI::optDisableFTP() {
+ 
+  bool isFTPEnabled = FS::IsFTPEnabled();
+  string enable = "enable";
+  string disable = "disable";
+
+  string question = "";
+
+  if(isFTPEnabled)
+	question = disable;
+  else
+	question = enable;
+
+    if(MessageBox("FTP On/Off","Do you want to "+question+"\nFTP as system service?", TYPE_YES_NO)) {
+
+        if(isFTPEnabled)
+        {
+            FS::SetFTPStatus(false);
+            MessageBox("Info","FTP has been set to enabled.\nReboot is required to apply changes!",TYPE_OK);
+        }
+        else
+        {
+            FS::SetFTPStatus(true);
+            MessageBox("Info","FTP has been set to disabled.\nReboot is required to apply changes!",TYPE_OK);
+        }
+
+    }
+
+}
+
+//remove template
 
 //remove template
 void UI::optDisableTemplate() {
@@ -279,6 +326,10 @@ void UI::RePaintMenu()
     {
         mainMenu.push_back(MenuOption("Prodinfo RW","RO/RW Prodinfo",nullptr));
     }
+    if(RRReleaseNumber >= RR_MINVERSIONFTP)
+    {
+        mainMenu.push_back(MenuOption("FTP On/Off","Enable/Disable FTP",nullptr));
+    }
     mainMenu.push_back(MenuOption("About", "About RetroReloaded Updater.",  bind(&UI::optAbout, this)));
 
     
@@ -297,6 +348,10 @@ void UI::RePaintMenu()
         mainMenu[menuOptionProdinfo].subMenu.push_back(MenuOption("Prodinfo RO/RW", "",bind(&UI::optDisableProdinfo, this)));
     }
 
+    if(RRReleaseNumber >= RR_MINVERSIONFTP)
+    {
+        mainMenu[menuOptionFTP].subMenu.push_back(MenuOption("FTP On/Off", "",bind(&UI::optDisableFTP, this)));
+    }
 }
 
 void UI::drawTemplatesOption(){
@@ -427,6 +482,7 @@ void UI::setInstance(UI ui) {
 
     TemplateEnabled = FS::IsTemplatedEnabled();
     ProdinfoRW = FS::IsProdinfoRW();
+    isFTPEnabled = FS::IsFTPEnabled();
     setMenuOptionValues();
 
     if(RRReleaseNumber < RR_MINVERSION)

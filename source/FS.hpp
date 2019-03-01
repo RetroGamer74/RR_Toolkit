@@ -27,6 +27,8 @@ using namespace std;
 namespace FS {
     vector<string> EnumDir(string);
     bool DirExists(string dirstr);
+    void SetFTPStatus(bool value);
+    void DeleteFile(string path);
     unsigned DeleteDirRecursive(string path);
     unsigned MakeDir(string file, unsigned perm);
     int GetCustomFirmware_ID();
@@ -50,6 +52,8 @@ namespace FS {
     void DoEnableTemplate(string TemplateCode);
     string GetFullTemplatePath();
     string GetFullProdinfoPath();
+    string GetFullFTPPath();
+    bool IsFTPEnabled();
     int GetRRReleaseNumber();
     void SetProdinfoMode(int value);
 	string TestFunction();

@@ -33,7 +33,7 @@ include $(DEVKITPRO)/libnx/switch_rules
 
 APP_TITLE := RetroReloaded Updater
 APP_AUTHOR := RetroGamer_74
-APP_VERSION := 1.3
+APP_VERSION := 1.4
 
 ICON := Icon.jpg
 TARGET		:=	RetroReloadedUpdater
