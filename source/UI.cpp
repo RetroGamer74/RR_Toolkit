@@ -23,6 +23,8 @@
 #include "UI.hpp"
 #include <stdio.h>
 #include <fstream>
+#include <stdbool.h>
+#include "Utils/reboot_class.hpp"
 
 #define WIN_WIDTH 1280
 #define WIN_HEIGHT 720
@@ -55,15 +57,17 @@ static bool TemplateEnabled;
 static bool ProdinfoRW;
 static bool isFTPEnabled = false;;
 static int RRReleaseNumber;
+static string MessageIssue = "";
 
 static u32 menuOptionCFWUpdate = 0;
-static u32 menuOptionThemeEnable = 1;
-static u32 menuOptionSelectTheme = 2;
-static u32 menuOptionProdinfo = 3;
-static u32 menuOptionFTP = 4;
-static u32 menuOptionAbout = 5;
+static u32 menuOptionReboot = 1;
+static u32 menuOptionThemeEnable = 2;
+static u32 menuOptionSelectTheme = 3;
+static u32 menuOptionProdinfo = 4;
+static u32 menuOptionFTP = 5;
+static u32 menuOptionAbout = 6;
 
-
+static bool can_reboot = true;
 
 u32 clippy = 0;
 
@@ -109,7 +113,7 @@ void UI::optRRUpdate() {
 
 if(current_RR_version != new_release)
 {
-if(MessageBox("Warning!", "The latest release is "+ new_release + ". \nThis procedure will take some time, and \nyou can feel it is frozen. Just wait :-)\nAre you ready to go?", TYPE_YES_NO)) {
+if(MessageBox("Warning!", "The latest release is "+ new_release + ". \nAdvise:Update thru Github is best option.\nThis procedure will take some time, and \nyou can feel it is frozen. Just wait :-)\nAre you ready to go?", TYPE_YES_NO)) {
     IncrementProgressBar(&prog);
     bool res = net.Download(url,filename );
     IncrementProgressBar(&prog);
@@ -170,33 +174,48 @@ void UI::optAbout() {
     TYPE_OK);
 }
 
-
 void setMenuOptionValues()
 {
 	if(RRReleaseNumber < RR_MINVERSION)
 	{
-		menuOptionAbout = 1;
+		menuOptionAbout = 2;
 		return;
 	}
 
 	if(RRReleaseNumber >= RR_MINVERSION && RRReleaseNumber < RR_MINVERSIONPRODINFO)
 	{
-		menuOptionAbout = 3;
+		menuOptionAbout = 4;
 		return;
 	}
 
 	if(RRReleaseNumber >= RR_MINVERSIONPRODINFO && RRReleaseNumber < RR_MINVERSIONFTP)
 	{
-		menuOptionAbout = 4;
+		menuOptionAbout = 5;
 		return;
 	}
 }
+
+
+void UI::optReboot() {
+
+    if(can_reboot)
+	Reboot::DoReboot();
+    else
+	MessageBox("Info","Reboot didn't work",TYPE_OK);	
+}
+
 
 void UI::optDisableProdinfo() {
  
   bool isProdinfoRW = FS::IsProdinfoRW();
   string RO = "Read Only";
   string RW = "Read / Write";
+
+  if(CurrentCFG_Name != "Atmosphere")
+  {
+     MessageBox("Info","This feature is only available booting Atmosphere.",TYPE_OK);
+     return; 
+  }
 
   string question = "";
 
@@ -315,6 +334,7 @@ void UI::RePaintMenu()
 
         //Main pages
     mainMenu.push_back(MenuOption("RR Updates", "Update RR Now!.", nullptr));
+    mainMenu.push_back(MenuOption("Warm Reboot", "Go to RR Splash Boot!.", nullptr));
 
     if(RRReleaseNumber >= RR_MINVERSION)
     {
@@ -330,12 +350,16 @@ void UI::RePaintMenu()
     {
         mainMenu.push_back(MenuOption("FTP On/Off","Enable/Disable FTP",nullptr));
     }
+
+
     mainMenu.push_back(MenuOption("About", "About RetroReloaded Updater.",  bind(&UI::optAbout, this)));
 
     
     
     //Subpages
     mainMenu[menuOptionCFWUpdate].subMenu.push_back(MenuOption("Update RR Now", "", bind(&UI::optRRUpdate, this)));
+    mainMenu[menuOptionReboot].subMenu.push_back(MenuOption("Go to RR Splash Boot!", "", bind(&UI::optReboot, this)));
+
 //    mainMenu[menuOptionCFWUpdate].subMenu.push_back(MenuOption("Update RR NRO", "", bind(&UI::optUpdateHB, this)));
     if(RRReleaseNumber >= RR_MINVERSION)
     {
@@ -487,6 +511,8 @@ void UI::setInstance(UI ui) {
 
     if(RRReleaseNumber < RR_MINVERSION)
         ui.MessageBox("Warning","Some features are disabled because\nyour RR version is lower than 1.24.\nPlease update!",TYPE_OK);
+
+    can_reboot=Reboot::InitalizeRebootFeature();
 }
 
 UI *UI::getInstance() {
@@ -512,6 +538,7 @@ void UI::deinit() {
 void UI::exitApp() {
     deinit();
     appletEndBlockingHomeButton(); // make sure we don't screw up hbmenu
+    Reboot::ExitRebootFeature(can_reboot);
     ::exit(0);
 }
 
@@ -738,3 +765,4 @@ void UI::MenuBack() {
     else
         exitApp();
 }
+
