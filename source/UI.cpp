@@ -334,7 +334,7 @@ void UI::RePaintMenu()
 
         //Main pages
     mainMenu.push_back(MenuOption("RR Updates", "Update RR Now!.", nullptr));
-    mainMenu.push_back(MenuOption("Warm Reboot", "Go to RR Splash Boot!.", nullptr));
+    mainMenu.push_back(MenuOption("Warm Reboot", "RR. Reboot!.", nullptr));
 
     if(RRReleaseNumber >= RR_MINVERSION)
     {
@@ -358,7 +358,7 @@ void UI::RePaintMenu()
     
     //Subpages
     mainMenu[menuOptionCFWUpdate].subMenu.push_back(MenuOption("Update RR Now", "", bind(&UI::optRRUpdate, this)));
-    mainMenu[menuOptionReboot].subMenu.push_back(MenuOption("Go to RR Splash Boot!", "", bind(&UI::optReboot, this)));
+    mainMenu[menuOptionReboot].subMenu.push_back(MenuOption("RR. Reboot!", "", bind(&UI::optReboot, this)));
 
 //    mainMenu[menuOptionCFWUpdate].subMenu.push_back(MenuOption("Update RR NRO", "", bind(&UI::optUpdateHB, this)));
     if(RRReleaseNumber >= RR_MINVERSION)
