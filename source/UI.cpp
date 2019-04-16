@@ -56,6 +56,8 @@ static u32 CurrentFirmware_ID; //Current CFW ID
 static bool TemplateEnabled;
 static bool ProdinfoRW;
 static bool isFTPEnabled = false;;
+static bool isLDNEnabled = false;;
+static bool isAMIBOEnabled = false;;
 static int RRReleaseNumber;
 static string MessageIssue = "";
 
@@ -64,7 +66,7 @@ static u32 menuOptionReboot = 1;
 static u32 menuOptionThemeEnable = 2;
 static u32 menuOptionSelectTheme = 3;
 static u32 menuOptionProdinfo = 4;
-static u32 menuOptionFTP = 5;
+static u32 menuOptionService = 5;
 static u32 menuOptionAbout = 6;
 
 static bool can_reboot = true;
@@ -148,6 +150,8 @@ else
 void UI::optAbout() {
     string mode = "";
     string ftpStatus = "";
+    string ldnStatus = "";
+    string amiboStatus = "";
     if(FS::IsProdinfoRW())
 	mode = "RW";
     else
@@ -157,16 +161,27 @@ void UI::optAbout() {
 	ftpStatus="Enabled";
     else
         ftpStatus="Disabled";
+    if(FS::IsLDNEnabled())
+	ldnStatus="Enabled";
+    else
+        ldnStatus="Disabled";
+    if(FS::IsAMIBOEnabled())
+	amiboStatus="Enabled";
+    else
+        amiboStatus="Disabled";
 
     MessageBox(
         "About", 
         "NX FW Version: "+CurrentNXFirmwareVersion +"\n"+
         "SN: "+SerialNumber+"\n"+
         "RR Version: " + current_RR_version + 
-        "\n\n" +
+        "\n" +
         "CFW: "+ CurrentCFG_Name+"\n"+
 	"PRODINFO MODE: "+ mode + "\n"+
 	"SYS-FTP STATUS: "+ ftpStatus + "\n"+
+	"LANPLAY STATUS: "+ ldnStatus + "\n"+
+	"EMUIIBO STATUS: "+ amiboStatus + "\n"+
+	
         "Template: "+CurrentTemplate+"\n"+
         //" Located: sdmc:/"+CurrentCFG_Folder+" FWD_ID: "+std::to_string(CurrentFirmware_ID)+"\n"+
         "Main developers:\n" +
@@ -184,13 +199,13 @@ void setMenuOptionValues()
 
 	if(RRReleaseNumber >= RR_MINVERSION && RRReleaseNumber < RR_MINVERSIONPRODINFO)
 	{
-		menuOptionAbout = 4;
+		menuOptionAbout = 5;
 		return;
 	}
 
 	if(RRReleaseNumber >= RR_MINVERSIONPRODINFO && RRReleaseNumber < RR_MINVERSIONFTP)
 	{
-		menuOptionAbout = 5;
+		menuOptionAbout = 6;
 		return;
 	}
 }
@@ -259,12 +274,70 @@ void UI::optDisableFTP() {
         if(isFTPEnabled)
         {
             FS::SetFTPStatus(false);
-            MessageBox("Info","FTP has been set to enabled.\nReboot is required to apply changes!",TYPE_OK);
+            MessageBox("Info","FTP has been set to disabled.\nReboot is required to apply changes!",TYPE_OK);
         }
         else
         {
             FS::SetFTPStatus(true);
-            MessageBox("Info","FTP has been set to disabled.\nReboot is required to apply changes!",TYPE_OK);
+            MessageBox("Info","FTP has been set to enabled.\nReboot is required to apply changes!",TYPE_OK);
+        }
+
+    }
+
+}
+void UI::optDisableLDN() {
+ 
+  bool isLDNEnabled = FS::IsLDNEnabled();
+  string enable = "enable";
+  string disable = "disable";
+
+  string question = "";
+
+  if(isLDNEnabled)
+	question = disable;
+  else
+	question = enable;
+
+    if(MessageBox("LanPlay On/Off","Do you want to "+question+"\nLanPlay as system service?", TYPE_YES_NO)) {
+
+        if(isLDNEnabled)
+        {
+            FS::SetLDNStatus(false);
+            MessageBox("Info","LanPlay has been set to disabled.\nReboot is required to apply changes!",TYPE_OK);
+        }
+        else
+        {
+            FS::SetLDNStatus(true);
+            MessageBox("Info","LanPlay has been set to enabled.\nReboot is required to apply changes!",TYPE_OK);
+        }
+
+    }
+
+}
+void UI::optDisableAMIBO() {
+ 
+  bool isAMIBOEnabled = FS::IsAMIBOEnabled();
+  string enable = "enable";
+  string disable = "disable";
+
+  string question = "";
+
+  if(isAMIBOEnabled)
+	question = disable;
+  else
+	question = enable;
+
+    if(MessageBox("EMUIIBO On/Off","Do you want to "+question+"\nEmuiibo as system service?", TYPE_YES_NO)) {
+
+        if(isAMIBOEnabled)
+        {
+            FS::SetAMIBOStatus(false);
+            MessageBox("Info","Emuiibo has been set to disabled.\nReboot is required to apply changes!",TYPE_OK);
+        }
+        else
+        {
+            FS::SetAMIBOStatus(true);
+            MessageBox("Info","Emuiibo has been set to enabled.\nReboot is required to apply changes!",TYPE_OK);
         }
 
     }
@@ -348,7 +421,7 @@ void UI::RePaintMenu()
     }
     if(RRReleaseNumber >= RR_MINVERSIONFTP)
     {
-        mainMenu.push_back(MenuOption("FTP On/Off","Enable/Disable FTP",nullptr));
+        mainMenu.push_back(MenuOption("Services On/Off","Enable/Disable Services",nullptr));
     }
 
 
@@ -374,14 +447,16 @@ void UI::RePaintMenu()
 
     if(RRReleaseNumber >= RR_MINVERSIONFTP)
     {
-        mainMenu[menuOptionFTP].subMenu.push_back(MenuOption("FTP On/Off", "",bind(&UI::optDisableFTP, this)));
+        mainMenu[menuOptionService].subMenu.push_back(MenuOption("FTP On/Off", "",bind(&UI::optDisableFTP, this)));
+        mainMenu[menuOptionService].subMenu.push_back(MenuOption("LanPlay On/Off", "",bind(&UI::optDisableLDN, this)));
+        mainMenu[menuOptionService].subMenu.push_back(MenuOption("Emuiibo On/Off", "",bind(&UI::optDisableAMIBO, this)));
     }
 }
 
 void UI::drawTemplatesOption(){
     TemplateEnabled = FS::IsTemplatedEnabled();
     string TemplateName;
-    mainMenu[2].subMenu.clear();
+    mainMenu[menuOptionSelectTheme].subMenu.clear();
     if(TemplateEnabled)
     {
         TemplateName = FS::GetToggleMarkWithTemplateName("RR");
@@ -507,6 +582,8 @@ void UI::setInstance(UI ui) {
     TemplateEnabled = FS::IsTemplatedEnabled();
     ProdinfoRW = FS::IsProdinfoRW();
     isFTPEnabled = FS::IsFTPEnabled();
+    isLDNEnabled = FS::IsLDNEnabled();
+    isAMIBOEnabled = FS::IsAMIBOEnabled();
     setMenuOptionValues();
 
     if(RRReleaseNumber < RR_MINVERSION)

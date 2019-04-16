@@ -178,6 +178,18 @@ string FS::GetFullFTPPath()
     return config_dir;	
 }
 
+string FS::GetFullLDNPath()
+{
+    string config_dir = "sdmc:/atmosphere/titles/4200000000000010/flags/boot2.flag";
+    return config_dir;	
+}
+
+string FS::GetFullAMIBOPath()
+{
+    string config_dir = "sdmc:/atmosphere/titles/0100000000000352/flags/boot2.flag";
+    return config_dir;	
+}
+
 string FS::GetFullTemplatePath()
 {
     string config_dir = "sdmc:/";
@@ -196,6 +208,32 @@ bool FS::IsFTPEnabled()
 {
     string source_path;
     source_path = FS::GetFullFTPPath();
+
+    if(FS::CheckFileExists(source_path))
+    {
+	return true;
+    }
+    else
+        return false;
+}
+
+bool FS::IsLDNEnabled()
+{
+    string source_path;
+    source_path = FS::GetFullLDNPath();
+
+    if(FS::CheckFileExists(source_path))
+    {
+	return true;
+    }
+    else
+        return false;
+}
+
+bool FS::IsAMIBOEnabled()
+{
+    string source_path;
+    source_path = FS::GetFullAMIBOPath();
 
     if(FS::CheckFileExists(source_path))
     {
@@ -411,6 +449,22 @@ void FS::SetFTPStatus(bool value)
 	FS::WriteLineFile(FS::GetFullFTPPath(), "");
    else
 	FS::DeleteFile(FS::GetFullFTPPath());	
+}
+
+void FS::SetLDNStatus(bool value)
+{
+   if(value)
+	FS::WriteLineFile(FS::GetFullLDNPath(), "");
+   else
+	FS::DeleteFile(FS::GetFullLDNPath());	
+}
+
+void FS::SetAMIBOStatus(bool value)
+{
+   if(value)
+	FS::WriteLineFile(FS::GetFullAMIBOPath(), "");
+   else
+	FS::DeleteFile(FS::GetFullAMIBOPath());	
 }
 
 unsigned FS::MakeDir(string file, unsigned perm) {

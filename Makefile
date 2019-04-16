@@ -33,7 +33,7 @@ include $(DEVKITPRO)/libnx/switch_rules
 
 APP_TITLE := RetroReloaded Updater
 APP_AUTHOR := RetroGamer_74
-APP_VERSION := 1.6
+APP_VERSION := 1.7
 
 ICON := Icon.jpg
 TARGET		:=	RetroReloadedUpdater
@@ -60,7 +60,7 @@ CXXFLAGS	:= $(CFLAGS) -fno-exceptions -Wno-missing-field-initializers -std=gnu++
 ASFLAGS	:=	-g $(ARCH)
 LDFLAGS	=	-specs=${DEVKITPRO}/libnx/switch.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
 
-LIBS	:= -lfreetype -lSDL2_mixer -lmodplug -lmpg123 -lvorbisidec -logg -lSDL2_ttf -lSDL2_gfx -lSDL2_image -lpng -ljpeg `sdl2-config --libs` `freetype-config --libs` -lcurl -lz -lnx
+LIBS	:= -lfreetype -lSDL2_mixer -lmodplug -lmpg123 -lvorbisidec -logg -lSDL2_ttf -lSDL2_gfx -lSDL2_image -lpng -ljpeg `sdl2-config --libs` `freetype-config --libs` -lcurl -lmbedtls -lmbedx509 -lmbedcrypto -lz -lnx 
 
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing

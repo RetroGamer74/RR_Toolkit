@@ -28,6 +28,8 @@ namespace FS {
     vector<string> EnumDir(string);
     bool DirExists(string dirstr);
     void SetFTPStatus(bool value);
+    void SetLDNStatus(bool value);
+    void SetAMIBOStatus(bool value);
     void DeleteFile(string path);
     unsigned DeleteDirRecursive(string path);
     unsigned MakeDir(string file, unsigned perm);
@@ -53,7 +55,11 @@ namespace FS {
     string GetFullTemplatePath();
     string GetFullProdinfoPath();
     string GetFullFTPPath();
+    string GetFullLDNPath();
+    string GetFullAMIBOPath();
     bool IsFTPEnabled();
+    bool IsLDNEnabled();
+    bool IsAMIBOEnabled();
     int GetRRReleaseNumber();
     void SetProdinfoMode(int value);
 	string TestFunction();

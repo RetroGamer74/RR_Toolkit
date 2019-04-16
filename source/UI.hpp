@@ -66,6 +66,8 @@ class UI
 	void optReboot();
 	void optDisableProdinfo();
 	void optDisableFTP();
+	void optDisableLDN();
+	void optDisableAMIBO();
         void EnableRRTheme();
         void EnableSBTheme();
         void drawTemplatesOption();
