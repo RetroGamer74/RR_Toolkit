@@ -174,19 +174,22 @@ string FS::GetFullProdinfoPath()
 
 string FS::GetFullFTPPath()
 {
-    string config_dir = "sdmc:/atmosphere/titles/420000000000000E/flags/boot2.flag";
+    string firmware_folder = FS::GetCustomFirmwareFolder();
+    string config_dir = "sdmc:/"+firmware_folder+"/titles/420000000000000E/flags/boot2.flag";
     return config_dir;	
 }
 
 string FS::GetFullLDNPath()
 {
-    string config_dir = "sdmc:/atmosphere/titles/4200000000000010/flags/boot2.flag";
+    string firmware_folder = FS::GetCustomFirmwareFolder();
+    string config_dir = "sdmc:/"+firmware_folder+"/titles/4200000000000010/flags/boot2.flag";
     return config_dir;	
 }
 
 string FS::GetFullAMIBOPath()
 {
-    string config_dir = "sdmc:/atmosphere/titles/0100000000000352/flags/boot2.flag";
+    string firmware_folder = FS::GetCustomFirmwareFolder();
+    string config_dir = "sdmc:/"+firmware_folder+"/titles/0100000000000352/flags/boot2.flag";
     return config_dir;	
 }
 

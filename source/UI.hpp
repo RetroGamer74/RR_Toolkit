@@ -61,6 +61,7 @@ class UI
         //SubMenus
         void optImage(u32 ind);
         void optAbout();
+        void optInfoSXOS();
         void optUpdateHB();
         void optDisableTemplate();
 	void optReboot();
@@ -71,6 +72,8 @@ class UI
         void EnableRRTheme();
         void EnableSBTheme();
         void drawTemplatesOption();
+        void drawServicesOption();
+        void drawTemplateCapableOption();
         void EnableTemplateCapable();
         void RePaintMenu();
         

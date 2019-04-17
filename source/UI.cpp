@@ -52,22 +52,27 @@ static string CurrentCFG_Folder; //Custom Firmware Folder
 static string CurrentTemplate; //Current Active Template
 static string CurrentNXFirmwareVersion; //Switch Firmware Version
 static string SerialNumber; //Switch Serial Number
+static string SXOS_Fail = "Not available in SX OS";
 static u32 CurrentFirmware_ID; //Current CFW ID
 static bool TemplateEnabled;
 static bool ProdinfoRW;
-static bool isFTPEnabled = false;;
-static bool isLDNEnabled = false;;
-static bool isAMIBOEnabled = false;;
+static bool isFTPEnabled = false;
+static bool isLDNEnabled = false;
+static bool isAMIBOEnabled = false;
 static int RRReleaseNumber;
 static string MessageIssue = "";
+static string FTPStatus = "Off";
+static string LDNStatus = "Off";
+static string AMIBOStatus = "Off";
+static string TemplateCapableStatus = "Off";
 
-static u32 menuOptionCFWUpdate = 0;
-static u32 menuOptionReboot = 1;
-static u32 menuOptionThemeEnable = 2;
-static u32 menuOptionSelectTheme = 3;
-static u32 menuOptionProdinfo = 4;
-static u32 menuOptionService = 5;
-static u32 menuOptionAbout = 6;
+//static u32 menuOptionCFWUpdate = 0;
+static u32 menuOptionReboot = 0;
+static u32 menuOptionThemeEnable = 1;
+static u32 menuOptionSelectTheme = 2;
+static u32 menuOptionProdinfo = 3;
+static u32 menuOptionService = 4;
+static u32 menuOptionAbout = 5;
 
 static bool can_reboot = true;
 
@@ -147,6 +152,11 @@ else
 */
 
 //Help
+
+void UI::optInfoSXOS() {
+	MessageBox("Not available","Feature not available in SX OS",TYPE_OK);
+}
+
 void UI::optAbout() {
     string mode = "";
     string ftpStatus = "";
@@ -189,23 +199,50 @@ void UI::optAbout() {
     TYPE_OK);
 }
 
+
+void setServicesStatusStrings()
+{
+	if(isFTPEnabled)
+		FTPStatus = "On";
+	else
+		FTPStatus = "Off";
+
+	if(isLDNEnabled)
+		LDNStatus = "On";
+	else
+		LDNStatus = "Off";
+
+	if(TemplateEnabled)
+		TemplateCapableStatus = "On";
+	else
+		TemplateCapableStatus = "Off";
+
+	if(isAMIBOEnabled)
+		AMIBOStatus = "On";
+	else
+		AMIBOStatus = "Off";
+}
+
 void setMenuOptionValues()
 {
+	
+	setServicesStatusStrings();
+
 	if(RRReleaseNumber < RR_MINVERSION)
 	{
-		menuOptionAbout = 2;
+		menuOptionAbout = 1;
 		return;
 	}
 
 	if(RRReleaseNumber >= RR_MINVERSION && RRReleaseNumber < RR_MINVERSIONPRODINFO)
 	{
-		menuOptionAbout = 5;
+		menuOptionAbout = 4;
 		return;
 	}
 
 	if(RRReleaseNumber >= RR_MINVERSIONPRODINFO && RRReleaseNumber < RR_MINVERSIONFTP)
 	{
-		menuOptionAbout = 6;
+		menuOptionAbout = 5;
 		return;
 	}
 }
@@ -228,7 +265,7 @@ void UI::optDisableProdinfo() {
 
   if(CurrentCFG_Name != "Atmosphere")
   {
-     MessageBox("Info","This feature is only available booting Atmosphere.",TYPE_OK);
+     MessageBox("Info","This feature is only available\nbooting Atmosphere.",TYPE_OK);
      return; 
   }
 
@@ -258,7 +295,7 @@ void UI::optDisableProdinfo() {
 
 void UI::optDisableFTP() {
  
-  bool isFTPEnabled = FS::IsFTPEnabled();
+  isFTPEnabled = FS::IsFTPEnabled();
   string enable = "enable";
   string disable = "disable";
 
@@ -282,12 +319,15 @@ void UI::optDisableFTP() {
             MessageBox("Info","FTP has been set to enabled.\nReboot is required to apply changes!",TYPE_OK);
         }
 
+        isFTPEnabled = FS::IsFTPEnabled();
+	setServicesStatusStrings();
+	UI::drawServicesOption();
     }
 
 }
 void UI::optDisableLDN() {
  
-  bool isLDNEnabled = FS::IsLDNEnabled();
+  isLDNEnabled = FS::IsLDNEnabled();
   string enable = "enable";
   string disable = "disable";
 
@@ -311,12 +351,15 @@ void UI::optDisableLDN() {
             MessageBox("Info","LanPlay has been set to enabled.\nReboot is required to apply changes!",TYPE_OK);
         }
 
+	isLDNEnabled = FS::IsLDNEnabled();
+	setServicesStatusStrings();
+	UI::drawServicesOption();
     }
 
 }
 void UI::optDisableAMIBO() {
  
-  bool isAMIBOEnabled = FS::IsAMIBOEnabled();
+  isAMIBOEnabled = FS::IsAMIBOEnabled();
   string enable = "enable";
   string disable = "disable";
 
@@ -340,11 +383,13 @@ void UI::optDisableAMIBO() {
             MessageBox("Info","Emuiibo has been set to enabled.\nReboot is required to apply changes!",TYPE_OK);
         }
 
+	isAMIBOEnabled = FS::IsAMIBOEnabled();
+	setServicesStatusStrings();
+	UI::drawServicesOption();
     }
 
 }
 
-//remove template
 
 //remove template
 void UI::optDisableTemplate() {
@@ -398,30 +443,44 @@ void UI::optDisableTemplate() {
             MessageBox("Info","Themes feature has been enabled",TYPE_OK);
         }
  
+        TemplateEnabled = FS::IsTemplatedEnabled();
+        setServicesStatusStrings();
+        UI::drawTemplateCapableOption();
     }
 }
 
 void UI::RePaintMenu()
 {
+    string menuOptionProdInfoTitle = "RO/RW Prodinfo";
+
+    if(CurrentCFG_Name == "SX OS")
+	menuOptionProdInfoTitle = SXOS_Fail;
+
+
+    setServicesStatusStrings();
     mainMenu.clear();
 
         //Main pages
-    mainMenu.push_back(MenuOption("RR Updates", "Update RR Now!.", nullptr));
+    //mainMenu.push_back(MenuOption("RR Updates", "Update RR Now!.", nullptr));
     mainMenu.push_back(MenuOption("Warm Reboot", "RR. Reboot!.", nullptr));
 
     if(RRReleaseNumber >= RR_MINVERSION)
     {
-        mainMenu.push_back(MenuOption("Theme Feature","Enable/Disable Template",nullptr));
+        mainMenu.push_back(MenuOption("Themes Capable","Showing current status.",nullptr));
         mainMenu.push_back(MenuOption("Select Themes","Select Template",nullptr));
 
     }
     if(RRReleaseNumber >= RR_MINVERSIONPRODINFO)
     {
-        mainMenu.push_back(MenuOption("Prodinfo RW","RO/RW Prodinfo",nullptr));
+        mainMenu.push_back(MenuOption("Prodinfo RW",menuOptionProdInfoTitle,nullptr));
     }
     if(RRReleaseNumber >= RR_MINVERSIONFTP)
     {
-        mainMenu.push_back(MenuOption("Services On/Off","Enable/Disable Services",nullptr));
+	if(CurrentCFG_Name == "SX OS")
+	        mainMenu.push_back(MenuOption("Services",SXOS_Fail,bind(&UI::optInfoSXOS, this)));
+	else
+	        mainMenu.push_back(MenuOption("Services","Showing current status.",nullptr));
+
     }
 
 
@@ -430,13 +489,13 @@ void UI::RePaintMenu()
     
     
     //Subpages
-    mainMenu[menuOptionCFWUpdate].subMenu.push_back(MenuOption("Update RR Now", "", bind(&UI::optRRUpdate, this)));
+//    mainMenu[menuOptionCFWUpdate].subMenu.push_back(MenuOption("Update RR Now", "", bind(&UI::optRRUpdate, this)));
     mainMenu[menuOptionReboot].subMenu.push_back(MenuOption("RR. Reboot!", "", bind(&UI::optReboot, this)));
 
 //    mainMenu[menuOptionCFWUpdate].subMenu.push_back(MenuOption("Update RR NRO", "", bind(&UI::optUpdateHB, this)));
     if(RRReleaseNumber >= RR_MINVERSION)
     {
-        mainMenu[menuOptionThemeEnable].subMenu.push_back(MenuOption("On/Off Template", "", bind(&UI::optDisableTemplate, this)));    
+        UI::drawTemplateCapableOption();
         UI::drawTemplatesOption();
     }
 
@@ -447,10 +506,26 @@ void UI::RePaintMenu()
 
     if(RRReleaseNumber >= RR_MINVERSIONFTP)
     {
-        mainMenu[menuOptionService].subMenu.push_back(MenuOption("FTP On/Off", "",bind(&UI::optDisableFTP, this)));
-        mainMenu[menuOptionService].subMenu.push_back(MenuOption("LanPlay On/Off", "",bind(&UI::optDisableLDN, this)));
-        mainMenu[menuOptionService].subMenu.push_back(MenuOption("Emuiibo On/Off", "",bind(&UI::optDisableAMIBO, this)));
+	if(CurrentCFG_Name != "SX OS")
+		UI::drawServicesOption();
     }
+}
+
+
+void UI::drawTemplateCapableOption()
+{
+	mainMenu[menuOptionThemeEnable].subMenu.clear();
+        mainMenu[menuOptionThemeEnable].subMenu.push_back(MenuOption("Themes => "+TemplateCapableStatus, "", bind(&UI::optDisableTemplate, this)));    
+
+
+}
+
+void UI::drawServicesOption()
+{
+	mainMenu[menuOptionService].subMenu.clear();
+        mainMenu[menuOptionService].subMenu.push_back(MenuOption("FTP => "+FTPStatus, "",bind(&UI::optDisableFTP, this)));
+        mainMenu[menuOptionService].subMenu.push_back(MenuOption("LanPlay => "+LDNStatus, "",bind(&UI::optDisableLDN, this)));
+        mainMenu[menuOptionService].subMenu.push_back(MenuOption("Emuiibo => "+AMIBOStatus, "",bind(&UI::optDisableAMIBO, this)));
 }
 
 void UI::drawTemplatesOption(){
@@ -466,7 +541,7 @@ void UI::drawTemplatesOption(){
     }
     else
     {
-        mainMenu[menuOptionSelectTheme].subMenu.push_back(MenuOption("Themes Feature", "", bind(&UI::EnableTemplateCapable, this)));        
+        mainMenu[menuOptionSelectTheme].subMenu.push_back(MenuOption("Themes Capable", "", bind(&UI::EnableTemplateCapable, this)));        
     }
 
 
@@ -474,7 +549,7 @@ void UI::drawTemplatesOption(){
 }
 
 void UI::EnableTemplateCapable(){
-    MessageBox("Info","In order to choose a theme,\nset Themes Feature to enable",TYPE_OK);
+    MessageBox("Info","In order to choose a theme,\nset Themes Capable to ON",TYPE_OK);
     UI::drawTemplatesOption();
 }
 
